@@ -1,0 +1,9 @@
+reboot:
+  target:
+    device:
+      integration: miner
+
+restart_backend:
+  target:
+    device:
+      integration: miner
