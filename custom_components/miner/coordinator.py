@@ -54,7 +54,8 @@ DEFAULT_DATA = {
         "efficiency": 0.0,
     },
     "board_sensors": {},
-    "fan_sensors": {},
+# EBE_20250814
+#    "fan_sensors": {},
     "config": {},
 }
 
@@ -123,8 +124,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                 return {
                     **DEFAULT_DATA,
                     "power_limit_range": {
-                        "min": self.config_entry.data.get(CONF_MIN_POWER, 100),
-                        "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                        "min": self.config_entry.data.get(CONF_MIN_POWER, 1800),
+                        "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
                     },
                 }
 
@@ -145,7 +146,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                     pyasic.DataOptions.HASHBOARDS,
                     pyasic.DataOptions.WATTAGE,
                     pyasic.DataOptions.WATTAGE_LIMIT,
-                    pyasic.DataOptions.FANS,
+# EBE_20250814
+#                    pyasic.DataOptions.FANS,
                     pyasic.DataOptions.CONFIG,
                 ]
             )
@@ -159,8 +161,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                 return {
                     **DEFAULT_DATA,
                     "power_limit_range": {
-                        "min": self.config_entry.data.get(CONF_MIN_POWER, 100),
-                        "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                        "min": self.config_entry.data.get(CONF_MIN_POWER, 1800),
+                        "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
                     },
                 }
 
@@ -187,13 +189,60 @@ class MinerCoordinator(DataUpdateCoordinator):
         except AttributeError:
             active_preset = None
 
+
+# EBE_20250814_BEGIN
+
+        u_efficiency = 0.0
+        try:
+            if hashrate <= 0:
+                u_efficiency = round(float(miner_data.wattage / (hashrate + 0.01)), 2)
+            else:
+                u_efficiency = round(float(miner_data.wattage / hashrate), 2)
+        except AttributeError:
+            u_efficiency = None
+
+        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_efficiency: {u_efficiency}")
+
+        u_is_mining = None
+        try:
+            if miner_data.wattage > 50.0 and hashrate > 0.0:
+#                miner_data.is_mining = True
+                u_is_mining = True
+            else:
+#                miner_data.is_mining = False
+                u_is_mining = False
+        except AttributeError:
+#            miner_data.is_mining = None
+            u_is_mining = None
+
+        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_is_mining: {u_is_mining}")
+
+        board_count = 0
+        u_max_chip_temp = 0.0
+        for board in miner_data.hashboards:
+            board_count = board_count + 1
+#            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
+#            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: board.chip_temp: {board.chip_temp}")
+#            _LOGGER.warning(f"EBE_20250814_04: coordinator.py _async_update_data: board_count: {board_count}")
+            if u_max_chip_temp < board.chip_temp:
+                u_max_chip_temp = board.chip_temp
+
+        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_max_chip_temp: {u_max_chip_temp}")
+
+
+# EBE_20250814_END
+
+
         data = {
             "hostname": miner_data.hostname,
             "mac": miner_data.mac,
             "make": miner_data.make,
             "model": miner_data.model,
             "ip": self.miner.ip,
-            "is_mining": miner_data.is_mining,
+# EBE_20250814_BEGIN
+#            "is_mining": miner_data.is_mining,
+            "is_mining": u_is_mining,
+# EBE_20250814_END
             "fw_ver": miner_data.fw_ver,
             "miner_sensors": {
                 "hashrate": hashrate,
@@ -203,6 +252,11 @@ class MinerCoordinator(DataUpdateCoordinator):
                 "power_limit": miner_data.wattage_limit,
                 "miner_consumption": miner_data.wattage,
                 "efficiency": miner_data.efficiency_fract,
+# EBE_20250814_BEGIN
+                "u_max_chip_temperature": u_max_chip_temp,
+                "u_efficiency": u_efficiency,
+#                "u_is_mining": u_is_mining,
+# EBE_20250814_END
             },
             "board_sensors": {
                 board.slot: {
@@ -212,13 +266,15 @@ class MinerCoordinator(DataUpdateCoordinator):
                 }
                 for board in miner_data.hashboards
             },
-            "fan_sensors": {
-                idx: {"fan_speed": fan.speed} for idx, fan in enumerate(miner_data.fans)
-            },
+# EBE_20250814_BEGIN
+#            "fan_sensors": {
+#                idx: {"fan_speed": fan.speed} for idx, fan in enumerate(miner_data.fans)
+#            },
+# EBE_20250814_END
             "config": miner_data.config,
             "power_limit_range": {
-                "min": self.config_entry.data.get(CONF_MIN_POWER, 100),
-                "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                "min": self.config_entry.data.get(CONF_MIN_POWER, 1800),
+                "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
             },
         }
         return data

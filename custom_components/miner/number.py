@@ -136,7 +136,10 @@ class MinerPowerLimitNumber(CoordinatorEntity[MinerCoordinator], NumberEntity):
                 f"{self.coordinator.config_entry.title}: Tuning not supported."
             )
 
-        result = await miner.set_power_limit(int(value))
+# EBE_20250814_BEGIN
+        result = False
+#        result = await miner.set_power_limit(int(value))
+# EBE_20250814_BEGIN
 
         if not result:
             raise pyasic.APIError("Failed to set wattage.")
