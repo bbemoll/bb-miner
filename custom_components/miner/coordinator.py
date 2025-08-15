@@ -192,28 +192,36 @@ class MinerCoordinator(DataUpdateCoordinator):
 
 # EBE_20250814_BEGIN
 
+        _LOGGER.warning(f"EBE_20250814_001: coordinator.py _async_update_data: hashrate: {hashrate}")
+        _LOGGER.warning(f"EBE_20250814_002: coordinator.py _async_update_data: miner_data.wattage: {miner_data.wattage}")
+        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data: {miner_data}")
+        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
+
+
         u_efficiency = 0.0
-        try:
-            if hashrate <= 0:
-                u_efficiency = round(float(miner_data.wattage / (hashrate + 0.01)), 2)
-            else:
-                u_efficiency = round(float(miner_data.wattage / hashrate), 2)
-        except AttributeError:
-            u_efficiency = None
+        if miner_data.wattage is not None:
+            try:
+                if hashrate <= 0:
+                    u_efficiency = round(float(miner_data.wattage / (hashrate + 0.01)), 2)
+                else:
+                    u_efficiency = round(float(miner_data.wattage / hashrate), 2)
+            except AttributeError:
+                u_efficiency = None
 
         _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_efficiency: {u_efficiency}")
 
-        u_is_mining = None
-        try:
-            if miner_data.wattage > 50.0 and hashrate > 0.0:
-#                miner_data.is_mining = True
-                u_is_mining = True
-            else:
-#                miner_data.is_mining = False
-                u_is_mining = False
-        except AttributeError:
-#            miner_data.is_mining = None
-            u_is_mining = None
+        u_is_mining = False
+        if miner_data.wattage is not None:
+            try:
+                if miner_data.wattage > 50.0 and hashrate > 0.0:
+#                    miner_data.is_mining = True
+                    u_is_mining = True
+                else:
+#                    miner_data.is_mining = False
+                    u_is_mining = False
+            except AttributeError:
+#                miner_data.is_mining = None
+                u_is_mining = None
 
         _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_is_mining: {u_is_mining}")
 
