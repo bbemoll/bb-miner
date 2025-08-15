@@ -192,11 +192,10 @@ class MinerCoordinator(DataUpdateCoordinator):
 
 # EBE_20250814_BEGIN
 
-        _LOGGER.warning(f"EBE_20250814_001: coordinator.py _async_update_data: hashrate: {hashrate}")
-        _LOGGER.warning(f"EBE_20250814_002: coordinator.py _async_update_data: miner_data.wattage: {miner_data.wattage}")
-        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data: {miner_data}")
-        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
-
+#        _LOGGER.warning(f"EBE_20250814_001: coordinator.py _async_update_data: hashrate: {hashrate}")
+#        _LOGGER.warning(f"EBE_20250814_002: coordinator.py _async_update_data: miner_data.wattage: {miner_data.wattage}")
+#        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data: {miner_data}")
+#        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
 
         u_efficiency = 0.0
         if miner_data.wattage is not None:
