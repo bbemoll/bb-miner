@@ -248,7 +248,7 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
 
     def define_option_list(self) -> list[str]:
 
-        list = ["1800", "2700", "3900", "4200", "5400"]
+        list = ["1600", "2000", "2400", "2800", "3200", "3600", "4000", "4400", "4800", "5200", "5600", "6000"]
 
         #        current_power_limit = None
         #        try:
