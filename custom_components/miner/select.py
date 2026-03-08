@@ -175,62 +175,62 @@ class MinerPowerLimitNumber(CoordinatorEntity[MinerCoordinator], NumberEntity):
 # EBE_20250812_END
 
 
-class MinerPowerModeSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
-    """A selector for the miner's miner mode."""
-
-    def __init__(
-            self,
-            coordinator: MinerCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator=coordinator)
-        self._attr_unique_id = f"{self.coordinator.data['mac']}-power-mode"
-
-
-    @property
-    def name(self) -> str | None:
-        """Return name of the entity."""
-        return f"{self.coordinator.config_entry.title} power mode"
-
-    @property
-    def device_info(self) -> entity.DeviceInfo:
-        """Return device info."""
-        return entity.DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.data["mac"])},
-
-
-
-
-
-            manufacturer=self.coordinator.data["make"],
-            model=self.coordinator.data["model"],
-            sw_version=self.coordinator.data["fw_ver"],
-            name=f"{self.coordinator.config_entry.title}",
-        )
-
-    @property
-    def current_option(self) -> str | None:
-        """The current option selected with the select."""
-        config: pyasic.MinerConfig = self.coordinator.data["config"]
-        # EBE_QQQ
-        _LOGGER.warning(f"EBE_20250812: select.py: config.mining_mode.mode: {str(config.mining_mode.mode).title()}")
-        return str(config.mining_mode.mode).title()
-
-    @property
-    def options(self) -> list[str]:
-        """The allowed options for the selector."""
-        return ["Normal", "High", "Low"]
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        option_map = {
-            "High": MiningModeHPM,
-            "Normal": MiningModeNormal,
-            "Low": MiningModeLPM,
-        }
-        cfg = await self.coordinator.miner.get_config()
-        cfg.mining_mode = option_map[option]()
-        await self.coordinator.miner.send_config(cfg)
+#class MinerPowerModeSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
+#    """A selector for the miner's miner mode."""
+#
+#    def __init__(
+#            self,
+#            coordinator: MinerCoordinator,
+#    ) -> None:
+#        """Initialize the sensor."""
+#        super().__init__(coordinator=coordinator)
+#        self._attr_unique_id = f"{self.coordinator.data['mac']}-power-mode"
+#
+#
+#    @property
+#    def name(self) -> str | None:
+#        """Return name of the entity."""
+#        return f"{self.coordinator.config_entry.title} power mode"
+#
+#    @property
+#    def device_info(self) -> entity.DeviceInfo:
+#        """Return device info."""
+#        return entity.DeviceInfo(
+#            identifiers={(DOMAIN, self.coordinator.data["mac"])},
+#
+#
+#
+#
+#
+#            manufacturer=self.coordinator.data["make"],
+#            model=self.coordinator.data["model"],
+#            sw_version=self.coordinator.data["fw_ver"],
+#            name=f"{self.coordinator.config_entry.title}",
+#        )
+#
+#    @property
+#    def current_option(self) -> str | None:
+#        """The current option selected with the select."""
+#        config: pyasic.MinerConfig = self.coordinator.data["config"]
+#        # EBE_QQQ
+#        _LOGGER.warning(f"EBE_20250812: select.py: config.mining_mode.mode: {str(config.mining_mode.mode).title()}")
+#        return str(config.mining_mode.mode).title()
+#
+#    @property
+#    def options(self) -> list[str]:
+#        """The allowed options for the selector."""
+#        return ["Normal", "High", "Low"]
+#
+#    async def async_select_option(self, option: str) -> None:
+#        """Change the selected option."""
+#        option_map = {
+#            "High": MiningModeHPM,
+#            "Normal": MiningModeNormal,
+#            "Low": MiningModeLPM,
+#        }
+#        cfg = await self.coordinator.miner.get_config()
+#        cfg.mining_mode = option_map[option]()
+#        await self.coordinator.miner.send_config(cfg)
 
 
 # EBE_20250812_BEGIN

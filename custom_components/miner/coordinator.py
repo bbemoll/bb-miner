@@ -246,9 +246,9 @@ class MinerCoordinator(DataUpdateCoordinator):
         u_max_chip_temp = 0.0
         for board in miner_data.hashboards:
             board_count = board_count + 1
-#            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
-#            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: board.chip_temp: {board.chip_temp}")
-#            _LOGGER.warning(f"EBE_20250814_04: coordinator.py _async_update_data: board_count: {board_count}")
+            _LOGGER.warning(f"EBE_20250814_02: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
+            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: board.chip_temp: {board.chip_temp}")
+            _LOGGER.warning(f"EBE_20250814_04: coordinator.py _async_update_data: board_count: {board_count}")
             if u_max_chip_temp < board.chip_temp:
                 u_max_chip_temp = board.chip_temp
 
