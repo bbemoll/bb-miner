@@ -32,14 +32,14 @@ from .coordinator import MinerCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-NUMBER_DESCRIPTION_KEY_MAP: dict[str, NumberEntityDescription] = {
-    "power_limit": NumberEntityDescription(
-        key="Power Limit",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=NumberDeviceClass.POWER,
-        entity_category=EntityCategory.CONFIG,
-    )
-}
+#NUMBER_DESCRIPTION_KEY_MAP: dict[str, NumberEntityDescription] = {
+#    "power_limit": NumberEntityDescription(
+#        key="Power Limit",
+#        native_unit_of_measurement=UnitOfPower.WATT,
+#        device_class=NumberDeviceClass.POWER,
+#        entity_category=EntityCategory.CONFIG,
+#    )
+#}
 
 
 async def async_setup_entry(
