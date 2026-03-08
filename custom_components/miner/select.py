@@ -357,7 +357,7 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
         #        try:
 
         current_power_limit = self.get_miner_current_power_limit()
-        _LOGGER.warning(f"EBE_20250812: select.py options: miner_data.value: define_option_list {current_power_limit}")
+        _LOGGER.warning(f"EBE_20260309_00: select.py options: miner_data.value: define_option_list {current_power_limit}")
 
         if current_power_limit != None:
 
@@ -397,7 +397,7 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
         #        cfg.mining_mode = option_map[option]()
         #        await self.coordinator.miner.send_config(cfg)
 
-        _LOGGER.warning(f"EBE_20250812: select.py: set select entity for power limit value: {option}")
+        _LOGGER.warning(f"EBE_20260309_01: select.py: set select entity for power limit value: {option}")
 
         #        if (
         #            option == "2100"
@@ -418,13 +418,13 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
  # EBE 20260308
             import pyasic  # lazy import to avoid blocking event loop
 
-            _LOGGER.warning(f"EBE_20250812: select.py: async_select_option: valid option found: {option}")
+            _LOGGER.warning(f"EBE_20260309_02: select.py: async_select_option: valid option found: {option}")
 
             value = option
 
             miner = self.coordinator.miner
 
-            _LOGGER.debug(
+            _LOGGER.warning(
                 f"{self.coordinator.config_entry.title}: setting power limit to {value}."
             )
 
@@ -440,11 +440,11 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
             if not result:
                 raise pyasic.APIError("Failed to set wattage.")
 
-            _LOGGER.warning(f"EBE_20250812: select.py: successfully set power limit value: {value}")
+            _LOGGER.warning(f"EBE_20260309_03: select.py: successfully set power limit value: {value}")
 
             self._attr_native_value = value
             self.async_write_ha_state()
         else:
-            _LOGGER.warning(f"EBE_20250812: select.py: invalid option for power limit value: {option}")
+            _LOGGER.warning(f"EBE_20260309_04: select.py: invalid option for power limit value: {option}")
 
 # EBE_20250812_END

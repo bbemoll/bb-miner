@@ -127,100 +127,65 @@ class MinerCoordinator(DataUpdateCoordinator):
         # At this point, miner is valid
         _LOGGER.debug(f"Found miner: {self.miner}")
 
-#        # Base data options to fetch
-#        data_options = [
-#            pyasic.DataOptions.HOSTNAME,
-#            pyasic.DataOptions.MAC,
-#            pyasic.DataOptions.IS_MINING,
-#            pyasic.DataOptions.FW_VERSION,
-#            pyasic.DataOptions.HASHRATE,
-#            pyasic.DataOptions.EXPECTED_HASHRATE,
-#            pyasic.DataOptions.HASHBOARDS,
-#            pyasic.DataOptions.WATTAGE,
-#            pyasic.DataOptions.WATTAGE_LIMIT,
-## EBE_20250814
-##            pyasic.DataOptions.FANS,
-#            pyasic.DataOptions.CONFIG,
-#        ]
-#
-#        try:
-#            miner_data = await self.miner.get_data(include=data_options)
-#        except Exception as err:
-#            # VNish firmware has a bug with CONFIG - retry without it
-#            if "config" in str(err).lower():
-#                _LOGGER.warning(
-#                    f"Config fetch failed for {self.miner}, retrying without CONFIG: {err}"
-#                )
-#                data_options.remove(pyasic.DataOptions.CONFIG)
-#                try:
-#                    miner_data = await self.miner.get_data(include=data_options)
-#                except Exception as retry_err:
-#                    self._failure_count += 1
-#                    if self._failure_count == 1:
-#                        _LOGGER.warning(
-#                            f"Error fetching miner data: {retry_err} – returning zeroed data (first failure)."
-#                        )
-#                        return {
-#                            **DEFAULT_DATA,
-#                            "power_limit_range": {
-#                                "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
-#                                "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
-#                            },
-#                        }
-#                    _LOGGER.exception(retry_err)
-#                    raise UpdateFailed from retry_err
-#            else:
-#                self._failure_count += 1
-#
-#                if self._failure_count == 1:
-#                    _LOGGER.warning(
-#                        f"Error fetching miner data: {err} – returning zeroed data (first failure)."
-#                    )
-#                    return {
-#                        **DEFAULT_DATA,
-#                        "power_limit_range": {
-#                            "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
-#                            "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
-#                        },
-#                    }
-#
-#                _LOGGER.exception(err)
-#                raise UpdateFailed from err
+        # Base data options to fetch
+        data_options = [
+            pyasic.DataOptions.HOSTNAME,
+            pyasic.DataOptions.MAC,
+            pyasic.DataOptions.IS_MINING,
+            pyasic.DataOptions.FW_VERSION,
+            pyasic.DataOptions.HASHRATE,
+            pyasic.DataOptions.EXPECTED_HASHRATE,
+            pyasic.DataOptions.HASHBOARDS,
+            pyasic.DataOptions.WATTAGE,
+            pyasic.DataOptions.WATTAGE_LIMIT,
+# EBE_20250814
+#            pyasic.DataOptions.FANS,
+            pyasic.DataOptions.CONFIG,
+        ]
 
         try:
-            miner_data = await self.miner.get_data(
-                include=[
-                    pyasic.DataOptions.HOSTNAME,
-                    pyasic.DataOptions.MAC,
-                    pyasic.DataOptions.IS_MINING,
-                    pyasic.DataOptions.FW_VERSION,
-                    pyasic.DataOptions.HASHRATE,
-                    pyasic.DataOptions.EXPECTED_HASHRATE,
-                    pyasic.DataOptions.HASHBOARDS,
-                    pyasic.DataOptions.WATTAGE,
-                    pyasic.DataOptions.WATTAGE_LIMIT,
-                    # EBE_20250814
-                    #                    pyasic.DataOptions.FANS,
-                    pyasic.DataOptions.CONFIG,
-                ]
-            )
+            miner_data = await self.miner.get_data(include=data_options)
         except Exception as err:
-            self._failure_count += 1
-
-            if self._failure_count == 1:
+            # VNish firmware has a bug with CONFIG - retry without it
+            if "config" in str(err).lower():
                 _LOGGER.warning(
-                    f"Error fetching miner data: {err} – returning zeroed data (first failure)."
+                    f"Config fetch failed for {self.miner}, retrying without CONFIG: {err}"
                 )
-                return {
-                    **DEFAULT_DATA,
-                    "power_limit_range": {
-                        "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
-                        "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
-                    },
-                }
+                data_options.remove(pyasic.DataOptions.CONFIG)
+                try:
+                    miner_data = await self.miner.get_data(include=data_options)
+                except Exception as retry_err:
+                    self._failure_count += 1
+                    if self._failure_count == 1:
+                        _LOGGER.warning(
+                            f"Error fetching miner data: {retry_err} – returning zeroed data (first failure)."
+                        )
+                        return {
+                            **DEFAULT_DATA,
+                            "power_limit_range": {
+                                "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
+                                "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
+                            },
+                        }
+                    _LOGGER.exception(retry_err)
+                    raise UpdateFailed from retry_err
+            else:
+                self._failure_count += 1
 
-            _LOGGER.exception(err)
-            raise UpdateFailed from err
+                if self._failure_count == 1:
+                    _LOGGER.warning(
+                        f"Error fetching miner data: {err} – returning zeroed data (first failure)."
+                    )
+                    return {
+                        **DEFAULT_DATA,
+                        "power_limit_range": {
+                            "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
+                            "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
+                        },
+                    }
+
+                _LOGGER.exception(err)
+                raise UpdateFailed from err
 
         _LOGGER.debug(f"Got data: {miner_data}")
 
