@@ -9,6 +9,13 @@ if TYPE_CHECKING:
 
 from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass
 from homeassistant.components.number import NumberEntity
+
+# EBE 20260308
+from homeassistant.components.select import SelectEntity
+from pyasic.config.mining import MiningModeHPM
+from pyasic.config.mining import MiningModeLPM
+from pyasic.config.mining import MiningModeNormal
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
