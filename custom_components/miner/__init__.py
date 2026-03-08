@@ -15,7 +15,7 @@ from .const import PYASIC_VERSION
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.NUMBER,
+#    Platform.NUMBER,
     Platform.SELECT,
 ]
 
