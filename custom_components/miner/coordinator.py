@@ -1,19 +1,9 @@
 """Miner DataUpdateCoordinator."""
 import logging
 from datetime import timedelta
-from importlib.metadata import version
+from typing import TYPE_CHECKING, Any
 
-from .const import PYASIC_VERSION
-
-try:
-    import pyasic
-
-    if not version("pyasic") == PYASIC_VERSION:
-        raise ImportError
-except ImportError:
-    from .patch import install_package
-
-    install_package(f"pyasic=={PYASIC_VERSION}")
+if TYPE_CHECKING:
     import pyasic
 
 from homeassistant.config_entries import ConfigEntry
@@ -54,8 +44,7 @@ DEFAULT_DATA = {
         "efficiency": 0.0,
     },
     "board_sensors": {},
-# EBE_20250814
-#    "fan_sensors": {},
+    "fan_sensors": {},
     "config": {},
 }
 
@@ -63,7 +52,7 @@ DEFAULT_DATA = {
 class MinerCoordinator(DataUpdateCoordinator):
     """Class to manage fetching update data from the Miner."""
 
-    miner: pyasic.AnyMiner = None
+    miner: "pyasic.AnyMiner" = None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize MinerCoordinator object."""
@@ -90,6 +79,8 @@ class MinerCoordinator(DataUpdateCoordinator):
 
     async def get_miner(self):
         """Get a valid Miner instance."""
+        import pyasic  # lazy import to avoid blocking event loop
+
         miner_ip = self.config_entry.data[CONF_IP]
         miner = await pyasic.get_miner(miner_ip)
         if miner is None:
@@ -111,6 +102,7 @@ class MinerCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch sensors from miners."""
+        import pyasic  # lazy import to avoid blocking event loop
 
         miner = await self.get_miner()
 
@@ -124,8 +116,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                 return {
                     **DEFAULT_DATA,
                     "power_limit_range": {
-                        "min": self.config_entry.data.get(CONF_MIN_POWER, 1800),
-                        "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
+                        "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
+                        "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
                     },
                 }
 
@@ -134,40 +126,64 @@ class MinerCoordinator(DataUpdateCoordinator):
         # At this point, miner is valid
         _LOGGER.debug(f"Found miner: {self.miner}")
 
+        # Base data options to fetch
+        data_options = [
+            pyasic.DataOptions.HOSTNAME,
+            pyasic.DataOptions.MAC,
+            pyasic.DataOptions.IS_MINING,
+            pyasic.DataOptions.FW_VERSION,
+            pyasic.DataOptions.HASHRATE,
+            pyasic.DataOptions.EXPECTED_HASHRATE,
+            pyasic.DataOptions.HASHBOARDS,
+            pyasic.DataOptions.WATTAGE,
+            pyasic.DataOptions.WATTAGE_LIMIT,
+            pyasic.DataOptions.FANS,
+            pyasic.DataOptions.CONFIG,
+        ]
+
         try:
-            miner_data = await self.miner.get_data(
-                include=[
-                    pyasic.DataOptions.HOSTNAME,
-                    pyasic.DataOptions.MAC,
-                    pyasic.DataOptions.IS_MINING,
-                    pyasic.DataOptions.FW_VERSION,
-                    pyasic.DataOptions.HASHRATE,
-                    pyasic.DataOptions.EXPECTED_HASHRATE,
-                    pyasic.DataOptions.HASHBOARDS,
-                    pyasic.DataOptions.WATTAGE,
-                    pyasic.DataOptions.WATTAGE_LIMIT,
-# EBE_20250814
-#                    pyasic.DataOptions.FANS,
-                    pyasic.DataOptions.CONFIG,
-                ]
-            )
+            miner_data = await self.miner.get_data(include=data_options)
         except Exception as err:
-            self._failure_count += 1
-
-            if self._failure_count == 1:
+            # VNish firmware has a bug with CONFIG - retry without it
+            if "config" in str(err).lower():
                 _LOGGER.warning(
-                    f"Error fetching miner data: {err} – returning zeroed data (first failure)."
+                    f"Config fetch failed for {self.miner}, retrying without CONFIG: {err}"
                 )
-                return {
-                    **DEFAULT_DATA,
-                    "power_limit_range": {
-                        "min": self.config_entry.data.get(CONF_MIN_POWER, 1800),
-                        "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
-                    },
-                }
+                data_options.remove(pyasic.DataOptions.CONFIG)
+                try:
+                    miner_data = await self.miner.get_data(include=data_options)
+                except Exception as retry_err:
+                    self._failure_count += 1
+                    if self._failure_count == 1:
+                        _LOGGER.warning(
+                            f"Error fetching miner data: {retry_err} – returning zeroed data (first failure)."
+                        )
+                        return {
+                            **DEFAULT_DATA,
+                            "power_limit_range": {
+                                "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
+                                "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                            },
+                        }
+                    _LOGGER.exception(retry_err)
+                    raise UpdateFailed from retry_err
+            else:
+                self._failure_count += 1
 
-            _LOGGER.exception(err)
-            raise UpdateFailed from err
+                if self._failure_count == 1:
+                    _LOGGER.warning(
+                        f"Error fetching miner data: {err} – returning zeroed data (first failure)."
+                    )
+                    return {
+                        **DEFAULT_DATA,
+                        "power_limit_range": {
+                            "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
+                            "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                        },
+                    }
+
+                _LOGGER.exception(err)
+                raise UpdateFailed from err
 
         _LOGGER.debug(f"Got data: {miner_data}")
 
@@ -189,67 +205,13 @@ class MinerCoordinator(DataUpdateCoordinator):
         except AttributeError:
             active_preset = None
 
-
-# EBE_20250814_BEGIN
-
-#        _LOGGER.warning(f"EBE_20250814_001: coordinator.py _async_update_data: hashrate: {hashrate}")
-#        _LOGGER.warning(f"EBE_20250814_002: coordinator.py _async_update_data: miner_data.wattage: {miner_data.wattage}")
-#        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data: {miner_data}")
-#        _LOGGER.warning(f"EBE_20250814_003: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
-
-        u_efficiency = 0.0
-        if miner_data.wattage is not None:
-            try:
-                if hashrate <= 0:
-                    u_efficiency = round(float(miner_data.wattage / (hashrate + 0.01)), 2)
-                else:
-                    u_efficiency = round(float(miner_data.wattage / hashrate), 2)
-            except AttributeError:
-                u_efficiency = None
-
-        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_efficiency: {u_efficiency}")
-
-        u_is_mining = False
-        if miner_data.wattage is not None:
-            try:
-                if miner_data.wattage > 50.0 and hashrate > 0.0:
-#                    miner_data.is_mining = True
-                    u_is_mining = True
-                else:
-#                    miner_data.is_mining = False
-                    u_is_mining = False
-            except AttributeError:
-#                miner_data.is_mining = None
-                u_is_mining = None
-
-        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_is_mining: {u_is_mining}")
-
-        board_count = 0
-        u_max_chip_temp = 0.0
-        for board in miner_data.hashboards:
-            board_count = board_count + 1
-#            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
-#            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: board.chip_temp: {board.chip_temp}")
-#            _LOGGER.warning(f"EBE_20250814_04: coordinator.py _async_update_data: board_count: {board_count}")
-            if u_max_chip_temp < board.chip_temp:
-                u_max_chip_temp = board.chip_temp
-
-        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_max_chip_temp: {u_max_chip_temp}")
-
-
-# EBE_20250814_END
-
-
         data = {
             "hostname": miner_data.hostname,
             "mac": miner_data.mac,
             "make": miner_data.make,
             "model": miner_data.model,
             "ip": self.miner.ip,
-# EBE_20250814_BEGIN
-#            "is_mining": miner_data.is_mining,
-            "is_mining": u_is_mining,
-# EBE_20250814_END
+            "is_mining": miner_data.is_mining,
             "fw_ver": miner_data.fw_ver,
             "miner_sensors": {
                 "hashrate": hashrate,
@@ -259,11 +221,6 @@ class MinerCoordinator(DataUpdateCoordinator):
                 "power_limit": miner_data.wattage_limit,
                 "miner_consumption": miner_data.wattage,
                 "efficiency": miner_data.efficiency_fract,
-# EBE_20250814_BEGIN
-                "u_max_chip_temperature": u_max_chip_temp,
-                "u_efficiency": u_efficiency,
-#                "u_is_mining": u_is_mining,
-# EBE_20250814_END
             },
             "board_sensors": {
                 board.slot: {
@@ -273,15 +230,13 @@ class MinerCoordinator(DataUpdateCoordinator):
                 }
                 for board in miner_data.hashboards
             },
-# EBE_20250814_BEGIN
-#            "fan_sensors": {
-#                idx: {"fan_speed": fan.speed} for idx, fan in enumerate(miner_data.fans)
-#            },
-# EBE_20250814_END
+            "fan_sensors": {
+                idx: {"fan_speed": fan.speed} for idx, fan in enumerate(miner_data.fans)
+            },
             "config": miner_data.config,
             "power_limit_range": {
-                "min": self.config_entry.data.get(CONF_MIN_POWER, 1800),
-                "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
+                "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
+                "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
             },
         }
         return data

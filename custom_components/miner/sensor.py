@@ -98,28 +98,12 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-# EBE_20250814_BEGIN
-#    "fan_speed": SensorEntityDescription(
-#        key="Fan Speed",
-#        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-#        state_class=SensorStateClass.MEASUREMENT,
-#        entity_category=EntityCategory.DIAGNOSTIC,
-#    ),
-    "u_max_chip_temperature": SensorEntityDescription(
-        key="u_Max Chip Temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        suggested_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "u_efficiency": SensorEntityDescription(
-        key="u_Efficiency",
-        native_unit_of_measurement=WATTS_PER_TERA_HASH,
+    "fan_speed": SensorEntityDescription(
+        key="Fan Speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-# EBE_20250814_END
 }
 
 
@@ -174,11 +158,9 @@ async def async_setup_entry(
     for board in range(coordinator.miner.expected_hashboards or 3):
         for s in ["board_temperature", "chip_temperature", "board_hashrate"]:
             sensors.append(_create_board_entity(board, s))
-# EBE_20250814_BEGIN
-#    for fan in range(coordinator.miner.expected_fans or 4):
-#        for s in ["fan_speed"]:
-#            sensors.append(_create_fan_entity(fan, s))
-# EBE_20250814_END
+    for fan in range(coordinator.miner.expected_fans or 4):
+        for s in ["fan_speed"]:
+            sensors.append(_create_fan_entity(fan, s))
     async_add_entities(sensors)
 
 

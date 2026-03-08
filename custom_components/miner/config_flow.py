@@ -4,24 +4,36 @@ from importlib.metadata import version
 
 from .const import PYASIC_VERSION
 
-try:
-    import pyasic
+# Lazy import - will be populated when needed
+pyasic = None
+MinerNetwork = None
+MinerMake = None
 
-    if not version("pyasic") == PYASIC_VERSION:
-        raise ImportError
-except ImportError:
-    from .patch import install_package
 
-    install_package(f"pyasic=={PYASIC_VERSION}")
-    import pyasic
-
-from pyasic import MinerNetwork
-
+def _ensure_pyasic():
+    """Ensure pyasic is installed and imported."""
+    global pyasic, MinerNetwork, MinerMake
+    if pyasic is not None:
+        return
+    
+    try:
+        import pyasic as _pyasic
+        if version("pyasic") != PYASIC_VERSION:
+            raise ImportError("Version mismatch")
+    except (ImportError, Exception):
+        from .patch import install_package
+        install_package(f"pyasic=={PYASIC_VERSION}")
+        import pyasic as _pyasic
+    
+    pyasic = _pyasic
+    from pyasic import MinerNetwork as _MinerNetwork
+    MinerNetwork = _MinerNetwork
+    from pyasic.device.makes import MinerMake as _MinerMake
+    MinerMake = _MinerMake
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_flow import register_discovery_flow
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.selector import TextSelectorConfig
 from homeassistant.helpers.selector import TextSelectorType
@@ -42,6 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
+    await hass.async_add_executor_job(_ensure_pyasic)
     adapters = await network.async_get_adapters(hass)
 
     for adapter in adapters:
@@ -55,13 +68,12 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     return False
 
 
-register_discovery_flow(DOMAIN, "miner", _async_has_devices)
-
-
 async def validate_ip_input(
+    hass: HomeAssistant,
     data: dict[str, str]
-) -> tuple[dict[str, str], pyasic.AnyMiner | None]:
+):
     """Validate the user input allows us to connect."""
+    await hass.async_add_executor_job(_ensure_pyasic)
     miner_ip = data.get(CONF_IP)
 
     miner = await pyasic.get_miner(miner_ip)
@@ -89,11 +101,11 @@ class MinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_IP, default=user_input.get(CONF_IP, "")): str,
-                vol.Optional(CONF_MIN_POWER, default=100): vol.All(
-                    vol.Coerce(int), vol.Range(min=100, max=10000)
+                vol.Optional(CONF_MIN_POWER, default=15): vol.All(
+                    vol.Coerce(int), vol.Range(min=15, max=10000)
                 ),
                 vol.Optional(CONF_MAX_POWER, default=10000): vol.All(
-                    vol.Coerce(int), vol.Range(min=100, max=10000)
+                    vol.Coerce(int), vol.Range(min=15, max=10000)
                 ),
             }
         )
@@ -101,7 +113,7 @@ class MinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(step_id="user", data_schema=schema)
 
-        errors, miner = await validate_ip_input(user_input)
+        errors, miner = await validate_ip_input(self.hass, user_input)
 
         if errors:
             return self.async_show_form(
@@ -116,6 +128,10 @@ class MinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get miner login credentials."""
         if user_input is None:
             user_input = {}
+
+        # Detect BitAxe miners and skip credential prompts
+        if self._miner.make == MinerMake.BITAXE:
+            return await self.async_step_title()
 
         schema_data = {}
 
@@ -221,3 +237,14 @@ class MinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data.update(user_input)
 
         return self.async_create_entry(title=self._data[CONF_TITLE], data=self._data)
+
+    async def async_step_discovery(self, discovery_info):
+        """Handle discovery."""
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+
+        has_devices = await _async_has_devices(self.hass)
+        if not has_devices:
+            return self.async_abort(reason="no_devices_found")
+
+        return await self.async_step_user()

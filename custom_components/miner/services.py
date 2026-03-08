@@ -7,11 +7,16 @@ import logging
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.core import ServiceCall
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.device_registry import (
+    async_get as async_get_device_registry,
+)
 
 from .const import DOMAIN
 from .const import SERVICE_REBOOT
 from .const import SERVICE_RESTART_BACKEND
+from .const import SERVICE_SET_WORK_MODE
+
+from pyasic.config.mining import MiningModeConfig
 
 LOGGER = logging.getLogger(__name__)
 
@@ -51,3 +56,24 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await asyncio.gather(*[miner.restart_backend() for miner in miners])
 
     hass.services.async_register(DOMAIN, SERVICE_RESTART_BACKEND, restart_backend)
+
+    async def set_work_mode(call: ServiceCall) -> None:
+        miners = await get_miners(call)
+        if len(miners) > 0:
+            mode = call.data["mode"]
+
+            async def set_mining_mode(miner):
+                cfg_mode = MiningModeConfig.default()
+                if mode == "high":
+                    cfg_mode = MiningModeConfig.high()
+                elif mode == "normal":
+                    cfg_mode = MiningModeConfig.normal()
+                elif mode == "low":
+                    cfg_mode = MiningModeConfig.low()
+                cfg = await miner.get_config()
+                cfg.mining_mode = cfg_mode
+                await miner.send_config(cfg)
+
+            await asyncio.gather(*(set_mining_mode(miner) for miner in miners))
+
+    hass.services.async_register(DOMAIN, SERVICE_SET_WORK_MODE, set_work_mode)
