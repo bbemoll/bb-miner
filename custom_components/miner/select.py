@@ -408,6 +408,9 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
                 break
 
         if found:
+ # EBE 20260308
+            import pyasic  # lazy import to avoid blocking event loop
+
             _LOGGER.warning(f"EBE_20250812: select.py: async_select_option: valid option found: {option}")
 
             value = option
