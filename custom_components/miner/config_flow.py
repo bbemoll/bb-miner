@@ -101,11 +101,11 @@ class MinerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_IP, default=user_input.get(CONF_IP, "")): str,
-                vol.Optional(CONF_MIN_POWER, default=1600): vol.All(
-                    vol.Coerce(int), vol.Range(min=1600, max=6000)
+                vol.Optional(CONF_MIN_POWER, default=15): vol.All(
+                    vol.Coerce(int), vol.Range(min=15, max=10000)
                 ),
-                vol.Optional(CONF_MAX_POWER, default=6000): vol.All(
-                    vol.Coerce(int), vol.Range(min=1600, max=6000)
+                vol.Optional(CONF_MAX_POWER, default=10000): vol.All(
+                    vol.Coerce(int), vol.Range(min=15, max=10000)
                 ),
             }
         )

@@ -7,15 +7,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pyasic
 
-#from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass
-#from homeassistant.components.number import NumberEntity
-
-# EBE 20260308
-from homeassistant.components.select import SelectEntity
-from pyasic.config.mining import MiningModeHPM
-from pyasic.config.mining import MiningModeLPM
-from pyasic.config.mining import MiningModeNormal
-
+from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass
+from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.core import HomeAssistant
@@ -32,14 +25,14 @@ from .coordinator import MinerCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-#NUMBER_DESCRIPTION_KEY_MAP: dict[str, NumberEntityDescription] = {
-#    "power_limit": NumberEntityDescription(
-#        key="Power Limit",
-#        native_unit_of_measurement=UnitOfPower.WATT,
-#        device_class=NumberDeviceClass.POWER,
-#        entity_category=EntityCategory.CONFIG,
-#    )
-#}
+NUMBER_DESCRIPTION_KEY_MAP: dict[str, NumberEntityDescription] = {
+    "power_limit": NumberEntityDescription(
+        key="Power Limit",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+    )
+}
 
 
 async def async_setup_entry(
@@ -52,401 +45,106 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
     if coordinator.miner.supports_autotuning:
-#        async_add_entities(
-#            [
-#                MinerPowerLimitNumber(
-#                    coordinator=coordinator,
-#                    entity_description=NUMBER_DESCRIPTION_KEY_MAP["power_limit"],
-#                )
-#            ]
-#        )
-
-# EBE_20260308_BEGIN
-
-        _LOGGER.warning(f"EBE_20260309_31: select.py: add select entity for power limit value")
-
         async_add_entities(
             [
-                MinerPowerValueSwitch(
+                MinerPowerLimitNumber(
                     coordinator=coordinator,
+                    entity_description=NUMBER_DESCRIPTION_KEY_MAP["power_limit"],
                 )
             ]
         )
 
-# EBE_20260308_END
 
-
-#class MinerPowerLimitNumber(CoordinatorEntity[MinerCoordinator], NumberEntity):
-#    """Defines a Miner Number to set the Power Limit of the Miner."""
-#
-#    def __init__(
-#        self, coordinator: MinerCoordinator, entity_description: NumberEntityDescription
-#    ):
-#        """Initialize the PowerLimit entity."""
-#        super().__init__(coordinator=coordinator)
-#        self._attr_native_value = self.coordinator.data["miner_sensors"]["power_limit"]
-#        self.entity_description = entity_description
-#
-#    @property
-#    def name(self) -> str | None:
-#        """Return name of the entity."""
-#        return f"{self.coordinator.config_entry.title} Power Limit"
-#
-#    @property
-#    def device_info(self) -> entity.DeviceInfo:
-#        """Return device info."""
-#        return entity.DeviceInfo(
-#            identifiers={(DOMAIN, self.coordinator.data["mac"])},
-#            connections={
-#                ("ip", self.coordinator.data["ip"]),
-#                (device_registry.CONNECTION_NETWORK_MAC, self.coordinator.data["mac"]),
-#            },
-#            configuration_url=f"http://{self.coordinator.data['ip']}",
-#            manufacturer=self.coordinator.data["make"],
-#            model=self.coordinator.data["model"],
-#            sw_version=self.coordinator.data["fw_ver"],
-#            name=f"{self.coordinator.config_entry.title}",
-#        )
-#
-#    @property
-#    def unique_id(self) -> str | None:
-#        """Return device UUID."""
-#        return f"{self.coordinator.data['mac']}-power_limit"
-#
-#    @property
-#    def native_min_value(self) -> float | None:
-#        """Return device minimum value."""
-#        return self.coordinator.data["power_limit_range"]["min"]
-#
-#    @property
-#    def native_max_value(self) -> float | None:
-#        """Return device maximum value."""
-#        return self.coordinator.data["power_limit_range"]["max"]
-#
-#    @property
-#    def native_step(self) -> float | None:
-#        """Return device increment step."""
-#        return 100
-#
-#    @property
-#    def native_unit_of_measurement(self):
-#        """Return device unit of measurement."""
-#        return "W"
-#
-#    async def async_set_native_value(self, value):
-#        """Update the current value."""
-#        import pyasic  # lazy import to avoid blocking event loop
-#
-#        miner = self.coordinator.miner
-#
-#        _LOGGER.debug(
-#            f"{self.coordinator.config_entry.title}: setting power limit to {value}."
-#        )
-#
-#        if not miner.supports_autotuning:
-#            raise TypeError(
-#                f"{self.coordinator.config_entry.title}: Tuning not supported."
-#            )
-#
-#        result = await miner.set_power_limit(int(value))
-#
-#        if not result:
-#            raise pyasic.APIError("Failed to set wattage.")
-#
-#        self._attr_native_value = value
-#        self.async_write_ha_state()
-#
-#    @callback
-#    def _handle_coordinator_update(self) -> None:
-#        if self.coordinator.data["miner_sensors"]["power_limit"] is not None:
-#            self._attr_native_value = self.coordinator.data["miner_sensors"][
-#                "power_limit"
-#            ]
-#
-#        super()._handle_coordinator_update()
-#
-#    @property
-#    def available(self) -> bool:
-#        """Return if entity is available or not."""
-#        return self.coordinator.available
-
-
-
-# EBE_20250812_END
-
-
-#class MinerPowerModeSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
-#    """A selector for the miner's miner mode."""
-#
-#    def __init__(
-#            self,
-#            coordinator: MinerCoordinator,
-#    ) -> None:
-#        """Initialize the sensor."""
-#        super().__init__(coordinator=coordinator)
-#        self._attr_unique_id = f"{self.coordinator.data['mac']}-power-mode"
-#
-#
-#    @property
-#    def name(self) -> str | None:
-#        """Return name of the entity."""
-#        return f"{self.coordinator.config_entry.title} power mode"
-#
-#    @property
-#    def device_info(self) -> entity.DeviceInfo:
-#        """Return device info."""
-#        return entity.DeviceInfo(
-#            identifiers={(DOMAIN, self.coordinator.data["mac"])},
-#
-#
-#
-#
-#
-#            manufacturer=self.coordinator.data["make"],
-#            model=self.coordinator.data["model"],
-#            sw_version=self.coordinator.data["fw_ver"],
-#            name=f"{self.coordinator.config_entry.title}",
-#        )
-#
-#    @property
-#    def current_option(self) -> str | None:
-#        """The current option selected with the select."""
-#        config: pyasic.MinerConfig = self.coordinator.data["config"]
-#        # EBE_QQQ
-#        _LOGGER.warning(f"EBE_20250812: select.py: config.mining_mode.mode: {str(config.mining_mode.mode).title()}")
-#        return str(config.mining_mode.mode).title()
-#
-#    @property
-#    def options(self) -> list[str]:
-#        """The allowed options for the selector."""
-#        return ["Normal", "High", "Low"]
-#
-#    async def async_select_option(self, option: str) -> None:
-#        """Change the selected option."""
-#        option_map = {
-#            "High": MiningModeHPM,
-#            "Normal": MiningModeNormal,
-#            "Low": MiningModeLPM,
-#        }
-#        cfg = await self.coordinator.miner.get_config()
-#        cfg.mining_mode = option_map[option]()
-#        await self.coordinator.miner.send_config(cfg)
-
-
-# EBE_20250812_BEGIN
-
-class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
-    """A selector for the miner's power value."""
+class MinerPowerLimitNumber(CoordinatorEntity[MinerCoordinator], NumberEntity):
+    """Defines a Miner Number to set the Power Limit of the Miner."""
 
     def __init__(
-            self,
-            coordinator: MinerCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
+        self, coordinator: MinerCoordinator, entity_description: NumberEntityDescription
+    ):
+        """Initialize the PowerLimit entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_unique_id = f"{self.coordinator.data['mac']}-power-value"
+        self._attr_native_value = self.coordinator.data["miner_sensors"]["power_limit"]
+        self.entity_description = entity_description
 
     @property
     def name(self) -> str | None:
         """Return name of the entity."""
-        return f"{self.coordinator.config_entry.title} Power Value"
+        return f"{self.coordinator.config_entry.title} Power Limit"
 
     @property
     def device_info(self) -> entity.DeviceInfo:
         """Return device info."""
         return entity.DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data["mac"])},
+            connections={
+                ("ip", self.coordinator.data["ip"]),
+                (device_registry.CONNECTION_NETWORK_MAC, self.coordinator.data["mac"]),
+            },
+            configuration_url=f"http://{self.coordinator.data['ip']}",
             manufacturer=self.coordinator.data["make"],
             model=self.coordinator.data["model"],
             sw_version=self.coordinator.data["fw_ver"],
             name=f"{self.coordinator.config_entry.title}",
         )
 
-    def get_miner_current_power_limit(self) -> str | None:
-
-        #        _LOGGER.warning(f"EBE_20250812: select.py get_miner_current_power_limit: self.coordinator.data: {self.coordinator.data}")
-        #        _LOGGER.warning(f"EBE_20250812: select.py get_miner_current_power_limit: self.coordinator.miner: {self.coordinator.miner}")
-
-        value = None
-
-        try:
-
-            _LOGGER.warning(
-                f"EBE_20260309_41: select.py get_miner_current_power_limit: self.coordinator.data: {self.coordinator.data}")
-
-            miner_data = str(self.coordinator.data)
-
-            len = miner_data.__len__()
-            #        _LOGGER.warning(f"EBE_20250812: select.py get_miner_current_power_limit: miner_data.len: {len}")
-            if len <= 0:
-                return None
-
-            pos = miner_data.find("'power_limit':", 0, len - 1)
-            #        _LOGGER.warning(f"EBE_20250812: select.py get_miner_current_power_limit: miner_data.pos: {pos}")
-
-            #            value = None
-            if pos != -1:
-                pos_separator = miner_data.find(",", pos, len - 1)
-                if pos_separator == -1:
-                    pos_separator = len
-                #            _LOGGER.warning(f"EBE_20250812: select.py get_miner_current_power_limit: miner_data.pos_separator: {pos_separator}")
-
-                value = miner_data[pos + 15:pos_separator]
-                _LOGGER.warning(f"EBE_20260309_42: select.py get_miner_current_power_limit: miner_data.value: {value}")
-
-        except Exception as err:
-            _LOGGER.error(
-                f"EBE_20260309_43: select.py current_option: get_miner_current_power_limit: couldn't get miner data")
-            return None
-
-        return str(value)
+    @property
+    def unique_id(self) -> str | None:
+        """Return device UUID."""
+        return f"{self.coordinator.data['mac']}-power_limit"
 
     @property
-    def current_option(self) -> str | None:
-        """The current option selected with the select."""
-        #        config: pyasic.MinerConfig = self.coordinator.data["config"]
-        #        return str(config.mining_mode.mode).title()
-
-        #        _LOGGER.warning(f"EBE_20250812_167: select.py current_option: self.coordinator.data: {self.coordinator.data}")
-        ##        _LOGGER.warning(f"EBE_20250812_168: select.py current_option: self.coordinator.miner: {self.coordinator.miner}")
-
-        #        miner_data = str(self.coordinator.data)
-
-        #        len = miner_data.__len__()
-        #        _LOGGER.warning(f"EBE_20250812_173: select.py current_option: miner_data.len: {len}")
-        #        if len <= 0:
-        #            return None
-
-        #        pos = miner_data.find("'power_limit':", 0, len - 1)
-        #        _LOGGER.warning(f"EBE_20250812_178: select.py current_option: miner_data.pos: {pos}")
-
-        #        value = None
-        #        if pos != -1:
-        #            pos_separator = miner_data.find(",", pos, len - 1)
-        #            if pos_separator == -1:
-        #                pos_separator = len
-        #            _LOGGER.warning(f"EBE_20250812_185: select.py current_option: miner_data.pos_separator: {pos_separator}")
-
-        #            value = miner_data[pos+15:pos_separator]
-        #            _LOGGER.warning(f"EBE_20250812_188: select.py current_option: miner_data.value: {value}")
-
-        #        value = 4200
-
-        #        return str(value)
-
-        current_power_limit = self.get_miner_current_power_limit()
-        #        current_power_limit = None
-        #
-        #        try:
-        #            current_power_limit = self.get_miner_current_power_limit()
-        #            _LOGGER.warning(f"EBE_20250812: select.py current_option: miner_data.value: current_power_limit {current_power_limit}")
-        #        except Exception as err:
-        #            _LOGGER.error(f"EBE_20250812: select.py current_option: miner_data.value: couldn't get current_power_limit")
-        #            return None
-
-        _LOGGER.warning(
-            f"EBE_20260309_44: select.py current_option: miner_data.value: current_power_limit {current_power_limit}")
-
-        return current_power_limit
-
-    def define_option_list(self) -> list[str]:
-
-        list = ["1600", "2000", "2400", "2800", "3200", "3600", "4000", "4400", "4800", "5200", "5600", "6000"]
-
-        #        current_power_limit = None
-        #        try:
-
-        current_power_limit = self.get_miner_current_power_limit()
-        _LOGGER.warning(f"EBE_20260309_00: select.py options: miner_data.value: define_option_list {current_power_limit}")
-
-        if current_power_limit != None:
-
-            found = False
-            for entry in list:
-                if entry == current_power_limit:
-                    found = True
-                    break
-            if not found:
-                list.insert(0, current_power_limit)
-
-            _LOGGER.warning(f"EBE_20260309_12: select.py options: miner_data.value: define_option_list {list}")
-
-        #        except Exception as err:
-        #            _LOGGER.error(f"EBE_20250812: select.py current_option: define_option_list: couldn't get miner data")
-        #            return None
-
-        return list
+    def native_min_value(self) -> float | None:
+        """Return device minimum value."""
+        return self.coordinator.data["power_limit_range"]["min"]
 
     @property
-    def options(self) -> list[str]:
-        """The allowed options for the selector."""
-        #        return [ "2100 - Low", "3900 - Normal", "5400 - High"]
+    def native_max_value(self) -> float | None:
+        """Return device maximum value."""
+        return self.coordinator.data["power_limit_range"]["max"]
 
-        list = self.define_option_list()
+    @property
+    def native_step(self) -> float | None:
+        """Return device increment step."""
+        return 100
 
-        _LOGGER.warning(f"EBE_20260309_11: select.py: options: define_option_list: {list}")
+    @property
+    def native_unit_of_measurement(self):
+        """Return device unit of measurement."""
+        return "W"
 
-        return list
+    async def async_set_native_value(self, value):
+        """Update the current value."""
+        import pyasic  # lazy import to avoid blocking event loop
 
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        #        option_map = {
-        #            "High": MiningModeHPM,
-        #            "Normal": MiningModeNormal,
-        #            "Low": MiningModeLPM,
-        #        }
-        #        cfg = await self.coordinator.miner.get_config()
-        #        cfg.mining_mode = option_map[option]()
-        #        await self.coordinator.miner.send_config(cfg)
+        miner = self.coordinator.miner
 
-        _LOGGER.warning(f"EBE_20260309_01: select.py: set select entity for power limit value: {option}")
+        _LOGGER.debug(
+            f"{self.coordinator.config_entry.title}: setting power limit to {value}."
+        )
 
-        #        if (
-        #            option == "2100"
-        #            or option == "3900"
-        #            or option == "5400"
-        #        ):
-        #            value = option
-
-        list = self.define_option_list()
-
-        found = False
-        for entry in list:
-            if entry == option:
-                found = True
-                break
-
-        if found:
- # EBE 20260308
-            import pyasic  # lazy import to avoid blocking event loop
-
-            _LOGGER.warning(f"EBE_20260309_02: select.py: async_select_option: valid option found: {option}")
-
-            value = option
-
-            miner = self.coordinator.miner
-
-            _LOGGER.warning(
-                f"{self.coordinator.config_entry.title}: setting power limit to {value}."
+        if not miner.supports_autotuning:
+            raise TypeError(
+                f"{self.coordinator.config_entry.title}: Tuning not supported."
             )
 
-            if not miner.supports_autotuning:
-                raise TypeError(
-                    f"{self.coordinator.config_entry.title}: Tuning not supported."
-                )
+        result = await miner.set_power_limit(int(value))
 
-            #            result = False
-            result = await miner.set_power_limit(int(value))
-            result = True
+        if not result:
+            raise pyasic.APIError("Failed to set wattage.")
 
-            if not result:
-                raise pyasic.APIError("Failed to set wattage.")
+        self._attr_native_value = value
+        self.async_write_ha_state()
 
-            _LOGGER.warning(f"EBE_20260309_03: select.py: successfully set power limit value: {value}")
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        if self.coordinator.data["miner_sensors"]["power_limit"] is not None:
+            self._attr_native_value = self.coordinator.data["miner_sensors"][
+                "power_limit"
+            ]
 
-            self._attr_native_value = value
-            self.async_write_ha_state()
-        else:
-            _LOGGER.warning(f"EBE_20260309_04: select.py: invalid option for power limit value: {option}")
+        super()._handle_coordinator_update()
 
-# EBE_20250812_END
+    @property
+    def available(self) -> bool:
+        """Return if entity is available or not."""
+        return self.coordinator.available
