@@ -300,9 +300,9 @@ class MinerCoordinator(DataUpdateCoordinator):
                 for board in miner_data.hashboards
             },
 # EBE_20260309_BEGIN
-            "fan_sensors": {
-                idx: {"fan_speed": fan.speed} for idx, fan in enumerate(miner_data.fans)
-            },
+#            "fan_sensors": {
+#                idx: {"fan_speed": fan.speed} for idx, fan in enumerate(miner_data.fans)
+#            },
 # EBE_20260309_END
             "config": miner_data.config,
             "power_limit_range": {
