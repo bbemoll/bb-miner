@@ -262,6 +262,7 @@ class MinerCoordinator(DataUpdateCoordinator):
             u_mid_chip_temp = u_max_chip_temp
 
         _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_max_chip_temp: {u_max_chip_temp}")
+
 # EBE_20260309_END
 
         data = {
