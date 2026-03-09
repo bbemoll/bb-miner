@@ -258,7 +258,7 @@ class MinerCoordinator(DataUpdateCoordinator):
                 u_max_chip_temp = board.chip_temp
 
         u_mid_chip_temp = sum_chip_temp / board_count
-        if u_mid_chip_temp < u_max_chip_temp
+        if u_mid_chip_temp < u_max_chip_temp:
             u_mid_chip_temp = u_max_chip_temp
 
         _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_max_chip_temp: {u_max_chip_temp}")
@@ -270,7 +270,6 @@ class MinerCoordinator(DataUpdateCoordinator):
             "make": miner_data.make,
             "model": miner_data.model,
             "ip": self.miner.ip,
-            "is_mining": miner_data.is_mining,
 # EBE_20260309_BEGIN
 #            "is_mining": miner_data.is_mining,
             "is_mining": u_is_mining,
