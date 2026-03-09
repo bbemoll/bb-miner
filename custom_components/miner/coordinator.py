@@ -116,8 +116,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                 return {
                     **DEFAULT_DATA,
                     "power_limit_range": {
-                        "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
-                        "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                        "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
+                        "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
                     },
                 }
 
@@ -161,8 +161,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                         return {
                             **DEFAULT_DATA,
                             "power_limit_range": {
-                                "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
-                                "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                                "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
+                                "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
                             },
                         }
                     _LOGGER.exception(retry_err)
@@ -177,8 +177,8 @@ class MinerCoordinator(DataUpdateCoordinator):
                     return {
                         **DEFAULT_DATA,
                         "power_limit_range": {
-                            "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
-                            "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                            "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
+                            "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
                         },
                     }
 
@@ -186,6 +186,10 @@ class MinerCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed from err
 
         _LOGGER.debug(f"Got data: {miner_data}")
+
+        _LOGGER.warning(
+            f"EBE_20260309_52: coordinator.py _async_update_data: {miner_data}")
+
 
         # Success: reset the failure count
         self._failure_count = 0
@@ -235,8 +239,12 @@ class MinerCoordinator(DataUpdateCoordinator):
             },
             "config": miner_data.config,
             "power_limit_range": {
-                "min": self.config_entry.data.get(CONF_MIN_POWER, 15),
-                "max": self.config_entry.data.get(CONF_MAX_POWER, 10000),
+                "min": self.config_entry.data.get(CONF_MIN_POWER, 1600),
+                "max": self.config_entry.data.get(CONF_MAX_POWER, 6000),
             },
         }
+
+        _LOGGER.warning(
+            f"EBE_20260309_53: coordinator.py _async_update_data: {data}")
+
         return data
