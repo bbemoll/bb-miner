@@ -128,12 +128,12 @@ class MinerPowerLimitNumber(CoordinatorEntity[MinerCoordinator], NumberEntity):
             )
 
 # EBE_20260309_BEGIN
-        result = False
-#        result = await miner.set_power_limit(int(value))
+#        result = False
+        result = await miner.set_power_limit(int(value))
         _LOGGER.warning(
             f"EBE_20260309_51: number.py async_set_native_value: {value}")
 
-        # EBE_20260309_BEGIN
+# EBE_20260309_END
 
         if not result:
             raise pyasic.APIError("Failed to set wattage.")
