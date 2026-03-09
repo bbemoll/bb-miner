@@ -127,7 +127,13 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-# EBE_20260309_END
+    "u_is_mining": SensorEntityDescription(
+        key="u_IsMining",
+        native_unit_of_measurement="",
+#        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    # EBE_20260309_END
 }
 
 
