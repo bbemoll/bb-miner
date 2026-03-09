@@ -288,7 +288,7 @@ class MinerCoordinator(DataUpdateCoordinator):
                 "u_max_chip_temperature": u_max_chip_temp,
                 "u_mid_chip_temperature": u_mid_chip_temp,
                 "u_efficiency": u_efficiency,
-                "u_is_mining": u_is_mining,
+#                "u_is_mining": u_is_mining,
 # EBE_20260309_END
             },
             "board_sensors": {
