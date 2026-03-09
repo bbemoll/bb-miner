@@ -63,7 +63,7 @@ async def async_setup_entry(
 
 # EBE_20260308_BEGIN
 
-        _LOGGER.warning(f"EBE_20250812: select.py: add select entity for power limit value")
+        _LOGGER.warning(f"EBE_20260309_31: select.py: add select entity for power limit value")
 
         async_add_entities(
             [
@@ -272,7 +272,7 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
         try:
 
             _LOGGER.warning(
-                f"EBE_20260308: select.py get_miner_current_power_limit: self.coordinator.data: {self.coordinator.data}")
+                f"EBE_20260309_41: select.py get_miner_current_power_limit: self.coordinator.data: {self.coordinator.data}")
 
             miner_data = str(self.coordinator.data)
 
@@ -292,11 +292,11 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
                 #            _LOGGER.warning(f"EBE_20250812: select.py get_miner_current_power_limit: miner_data.pos_separator: {pos_separator}")
 
                 value = miner_data[pos + 15:pos_separator]
-                _LOGGER.warning(f"EBE_20260308: select.py get_miner_current_power_limit: miner_data.value: {value}")
+                _LOGGER.warning(f"EBE_20260309_42: select.py get_miner_current_power_limit: miner_data.value: {value}")
 
         except Exception as err:
             _LOGGER.error(
-                f"EBE_20260308: select.py current_option: get_miner_current_power_limit: couldn't get miner data")
+                f"EBE_20260309_43: select.py current_option: get_miner_current_power_limit: couldn't get miner data")
             return None
 
         return str(value)
@@ -345,7 +345,7 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
         #            return None
 
         _LOGGER.warning(
-            f"EBE_20260308: select.py current_option: miner_data.value: current_power_limit {current_power_limit}")
+            f"EBE_20260309_44: select.py current_option: miner_data.value: current_power_limit {current_power_limit}")
 
         return current_power_limit
 
@@ -369,7 +369,7 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
             if not found:
                 list.insert(0, current_power_limit)
 
-            _LOGGER.warning(f"EBE_20250812: select.py options: miner_data.value: define_option_list {list}")
+            _LOGGER.warning(f"EBE_20260309_12: select.py options: miner_data.value: define_option_list {list}")
 
         #        except Exception as err:
         #            _LOGGER.error(f"EBE_20250812: select.py current_option: define_option_list: couldn't get miner data")
@@ -383,6 +383,8 @@ class MinerPowerValueSwitch(CoordinatorEntity[MinerCoordinator], SelectEntity):
         #        return [ "2100 - Low", "3900 - Normal", "5400 - High"]
 
         list = self.define_option_list()
+
+        _LOGGER.warning(f"EBE_20260309_11: select.py: options: define_option_list: {list}")
 
         return list
 

@@ -125,7 +125,7 @@ class MinerCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Miner Offline (consecutive failure)")
 
         # At this point, miner is valid
-        _LOGGER.debug(f"Found miner: {self.miner}")
+        _LOGGER.warning(f"Found miner: {self.miner}")
 
         # Base data options to fetch
         data_options = [
@@ -187,7 +187,7 @@ class MinerCoordinator(DataUpdateCoordinator):
                 _LOGGER.exception(err)
                 raise UpdateFailed from err
 
-        _LOGGER.debug(f"Got data: {miner_data}")
+        _LOGGER.warning(f"Got data: {miner_data}")
 
         # Success: reset the failure count
         self._failure_count = 0
@@ -225,7 +225,7 @@ class MinerCoordinator(DataUpdateCoordinator):
             except AttributeError:
                 u_efficiency = None
 
-        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_efficiency: {u_efficiency}")
+        _LOGGER.warning(f"EBE_20260309_21: coordinator.py _async_update_data: u_efficiency: {u_efficiency}")
 
         u_is_mining = False
         if miner_data.wattage is not None:
@@ -240,19 +240,19 @@ class MinerCoordinator(DataUpdateCoordinator):
 #                miner_data.is_mining = None
                 u_is_mining = None
 
-        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_is_mining: {u_is_mining}")
+        _LOGGER.warning(f"EBE_20260309_22: coordinator.py _async_update_data: u_is_mining: {u_is_mining}")
 
         board_count = 0
         u_max_chip_temp = 0.0
         for board in miner_data.hashboards:
             board_count = board_count + 1
-            _LOGGER.warning(f"EBE_20250814_02: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
-            _LOGGER.warning(f"EBE_20250814_03: coordinator.py _async_update_data: board.chip_temp: {board.chip_temp}")
-            _LOGGER.warning(f"EBE_20250814_04: coordinator.py _async_update_data: board_count: {board_count}")
+            _LOGGER.warning(f"EBE_20260309_23: coordinator.py _async_update_data: miner_data.hashboards: {miner_data.hashboards}")
+            _LOGGER.warning(f"EBE_20260309_24: coordinator.py _async_update_data: board.chip_temp: {board.chip_temp}")
+            _LOGGER.warning(f"EBE_20260309_25: coordinator.py _async_update_data: board_count: {board_count}")
             if u_max_chip_temp < board.chip_temp:
                 u_max_chip_temp = board.chip_temp
 
-        _LOGGER.warning(f"EBE_20250814: coordinator.py _async_update_data: u_max_chip_temp: {u_max_chip_temp}")
+        _LOGGER.warning(f"EBE_20260309_26: coordinator.py _async_update_data: u_max_chip_temp: {u_max_chip_temp}")
 
 
 # EBE_20250814_END
