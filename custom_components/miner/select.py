@@ -2,10 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import pyasic
 
 from homeassistant.components.number import NumberEntityDescription, NumberDeviceClass
 from homeassistant.components.number import NumberEntity
